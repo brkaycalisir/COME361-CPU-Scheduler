@@ -1,55 +1,92 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include "scheduler.h"
+#include "scheduler.hpp"
 
-// FCFS: ilk gelen ilk calisir
-void CPUScheduler::run_fcfs(std::vector<Process>& processes) {
-    std::cout << "\n=== FCFS CPU Scheduling Simulation (PoC) ===\n";
+// Bir sonucu ekrana yazdirir. UI kismi bunun yerine kendi arayuzunu yapabilir.
+void print_result(const ScheduleResult& r) {
+    std::cout << "\n=== " << r.algorithm_name << " ===\n";
+    for (const auto& g : r.gantt)
+        std::cout << "P" << g.pid << " | Start: " << g.start << " | End: " << g.end << "\n";
+    std::cout << "\nPID | Waiting | Turnaround\n";
+    for (const auto& p : r.processes)
+        std::cout << " P" << p.id << " |   " << p.waiting_time
+                  << "     |    " << p.turnaround_time << "\n";
+    std::cout << "Average Waiting Time    : " << r.avg_waiting_time << "\n";
+    std::cout << "Average Turnaround Time : " << r.avg_turnaround_time << "\n";
+}
 
-    // Once gelis zamanina gore sirala (ilk gelen basa)
-    std::sort(processes.begin(), processes.end(),
-              [](const Process& a, const Process& b) {
-                  return a.arrival_time < b.arrival_time;
-              });
+void print_comparison(const std::vector<ScheduleResult>& results) {
+    std::cout << "\n=== Karsilastirma ===\n";
+    for (const auto& r : results)
+        std::cout << r.algorithm_name << " -> Avg Waiting: " << r.avg_waiting_time
+                  << " | Avg Turnaround: " << r.avg_turnaround_time << "\n";
+}
 
-    int current_time = 0;
-    double total_waiting = 0, total_turnaround = 0;
-
-    for (auto& p : processes) {
-        // Process henuz gelmediyse CPU bos bekler
-        if (current_time < p.arrival_time) {
-            current_time = p.arrival_time;
-        }
-
-        p.waiting_time = current_time - p.arrival_time;
-        p.turnaround_time = p.waiting_time + p.burst_time;
-
-        std::cout << "Process P" << p.id
-                  << " | Start: " << current_time
-                  << " | End: " << (current_time + p.burst_time)
-                  << " | Waiting: " << p.waiting_time
-                  << " | Turnaround: " << p.turnaround_time << "\n";
-
-        total_waiting += p.waiting_time;
-        total_turnaround += p.turnaround_time;
-        current_time += p.burst_time;
+// Kullanicidan process bilgilerini alir
+std::vector<Process> read_processes() {
+    int n = 0;
+    while (n <= 0) {
+        std::cout << "Process sayisi: ";
+        if (!(std::cin >> n)) { std::cin.clear(); std::cin.ignore(1000, '\n'); n = 0; }
     }
 
-    std::cout << "Average Waiting Time    : " << total_waiting / processes.size() << "\n";
-    std::cout << "Average Turnaround Time : " << total_turnaround / processes.size() << "\n";
+    std::vector<Process> list;
+    for (int i = 1; i <= n; i++) {
+        Process p = {i, 0, 0, 0, 0, 0, 0, 0};
+        std::cout << "\nP" << i << " icin\n";
+
+        std::cout << "  Arrival time (0 veya daha buyuk): ";
+        while (!(std::cin >> p.arrival_time) || p.arrival_time < 0) {
+            std::cin.clear(); std::cin.ignore(1000, '\n');
+            std::cout << "  Gecersiz, tekrar gir: ";
+        }
+        std::cout << "  Burst time (1 veya daha buyuk): ";
+        while (!(std::cin >> p.burst_time) || p.burst_time <= 0) {
+            std::cin.clear(); std::cin.ignore(1000, '\n');
+            std::cout << "  Gecersiz, tekrar gir: ";
+        }
+        std::cout << "  Priority (kucuk sayi = yuksek oncelik): ";
+        while (!(std::cin >> p.priority)) {
+            std::cin.clear(); std::cin.ignore(1000, '\n');
+            std::cout << "  Gecersiz, tekrar gir: ";
+        }
+        list.push_back(p);
+    }
+    return list;
+}
+
+int read_quantum() {
+    int q = 0;
+    std::cout << "Quantum: ";
+    while (!(std::cin >> q) || q <= 0) {
+        std::cin.clear(); std::cin.ignore(1000, '\n');
+        std::cout << "Gecersiz, tekrar gir: ";
+    }
+    return q;
 }
 
 int main() {
-    CPUScheduler scheduler;
+    std::vector<Process> process_list = read_processes();
 
-    // {id, arrival_time, burst_time, waiting_time, turnaround_time}
-    std::vector<Process> process_list = {
-        {1, 0, 5, 0, 0},
-        {2, 1, 3, 0, 0},
-        {3, 2, 8, 0, 0}
-    };
+    int choice = 0;
+    std::cout << "\n1) FCFS\n2) SJF\n3) Round Robin\n4) Priority\n5) Hepsini karsilastir\nSecim: ";
+    std::cin >> choice;
 
-    scheduler.run_fcfs(process_list);
+    if (choice == 1) print_result(run_fcfs(process_list));
+    else if (choice == 2) print_result(run_sjf(process_list));
+    else if (choice == 3) print_result(run_round_robin(process_list, read_quantum()));
+    else if (choice == 4) print_result(run_priority(process_list));
+    else if (choice == 5) {
+        std::vector<ScheduleResult> results = {
+            run_fcfs(process_list),
+            run_sjf(process_list),
+            run_round_robin(process_list, read_quantum()),
+            run_priority(process_list)
+        };
+        for (const auto& r : results) print_result(r);
+        print_comparison(results);
+    } else {
+        std::cout << "Gecersiz secim\n";
+    }
     return 0;
 }
