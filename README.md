@@ -1,13 +1,38 @@
-# COME 361 - CPU Scheduling Algorithm Simulator (C++)
+# CPU Scheduling Simulator
 
-This repository contains the project skeleton and initial Proof of Concept (PoC) demo for the COME 361 Operating Systems Term Project.
+COME 361 Operating Systems – Term Project
 
-## Project Description
-A C++ command-line application that simulates CPU scheduling algorithms including FCFS (First-Come, First-Served) and Round Robin (RR) to measure process execution efficiency and waiting times.
+A command-line CPU scheduling simulator written in C++. The user enters a
+list of processes, chooses a scheduling algorithm, and the program prints the
+execution order and performance metrics.
 
-## Building and Running
-To compile and run the project using `g++`:
+## Algorithms
+- FCFS (First-Come, First-Served)
+- SJF (Shortest Job First, non-preemptive)
+- Round Robin (user-defined time quantum)
+- Priority (non-preemptive, smaller number = higher priority)
 
-```bash
-g++ main.cpp -o scheduler
-./scheduler
+## Metrics
+- Waiting time and turnaround time per process
+- Average waiting time and average turnaround time
+- Comparison of all algorithms (option 5)
+
+## Build and Run
+Requires a C++17 compiler (g++).
+
+```
+g++ main.cpp scheduler.cpp -o scheduler
+./scheduler        (Windows: .\scheduler)
+```
+
+## Usage
+1. Enter the number of processes.
+2. For each process enter arrival time, burst time and priority.
+3. Choose an algorithm (1-4) or compare all (5).
+4. For Round Robin, enter the time quantum.
+
+## Project Structure
+- `scheduler.hpp` – `Process`, `GanttEntry`, `ScheduleResult` structures and algorithm declarations
+- `scheduler.cpp` – algorithm implementations (each returns a `ScheduleResult`)
+- `main.cpp` – user input and result printing
+
