@@ -26,7 +26,10 @@ ScheduleResult run_fcfs(std::vector<Process> processes) {
 
     int time = 0;
     for (auto& p : processes) {
-        if (time < p.arrival_time) time = p.arrival_time;
+        if (time < p.arrival_time) {               // CPU bos kaldi
+            r.gantt.push_back({0, time, p.arrival_time});
+            time = p.arrival_time;
+        }
         r.gantt.push_back({p.id, time, time + p.burst_time});
         p.waiting_time = time - p.arrival_time;
         p.turnaround_time = p.waiting_time + p.burst_time;
@@ -53,9 +56,18 @@ static ScheduleResult run_non_preemptive(std::vector<Process> processes, bool us
             if (best == -1) { best = i; continue; }
             int a = use_priority ? processes[i].priority : processes[i].burst_time;
             int b = use_priority ? processes[best].priority : processes[best].burst_time;
-            if (a < b) best = i;
+            // esitlikte once gelen kazanir (o da esitse kucuk id)
+            if (a < b || (a == b && (processes[i].arrival_time < processes[best].arrival_time ||
+                (processes[i].arrival_time == processes[best].arrival_time && processes[i].id < processes[best].id)))) best = i;
         }
-        if (best == -1) { time++; continue; }   // kimse gelmedi, CPU bos
+        if (best == -1) {                       // kimse gelmedi, CPU bos: siradaki gelise atla
+            int nxt = -1;
+            for (int i = 0; i < n; i++)
+                if (!done[i] && (nxt == -1 || processes[i].arrival_time < nxt)) nxt = processes[i].arrival_time;
+            r.gantt.push_back({0, time, nxt});
+            time = nxt;
+            continue;
+        }
 
         Process& p = processes[best];
         r.gantt.push_back({p.id, time, time + p.burst_time});
@@ -104,6 +116,7 @@ ScheduleResult run_round_robin(std::vector<Process> processes, int quantum) {
             ready.push(next++);
 
         if (ready.empty()) {   // kimse yok, siradaki gelene atla
+            r.gantt.push_back({0, time, processes[next].arrival_time});
             time = processes[next].arrival_time;
             continue;
         }
