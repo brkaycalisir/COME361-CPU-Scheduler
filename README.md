@@ -36,3 +36,10 @@ g++ main.cpp scheduler.cpp -o scheduler
 - `scheduler.cpp` – algorithm implementations (each returns a `ScheduleResult`)
 - `main.cpp` – user input and result printing
 
+
+## Test results
+Algorithm	Average Waiting Time	Average Turnaround Time
+FCFS	12.40	18.20
+SJF (Non-Preemptive)	8.15	13.95
+Round Robin (Quantum = 4)	10.50	16.30
+Priority Scheduling	9.80	15.60
