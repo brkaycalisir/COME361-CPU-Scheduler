@@ -36,3 +36,9 @@ g++ main.cpp scheduler.cpp -o scheduler
 - `scheduler.cpp` – algorithm implementations (each returns a `ScheduleResult`)
 - `main.cpp` – user input and result printing
 
+## Test results
+Test Number	Process Count	Process Details (Arrival, Burst, Priority)	Menu Choice	Quantum
+Test 1	4	P1(0, 5, 2), P2(1, 3, 1), P3(2, 8, 4), P4(3, 6, 3)	5 (Compare all)	2
+Test 2	3	P1(0, 2, 1), P2(10, 3, 1), P3(10, 3, 1)	5 (Compare all)	4
+Test 3	1	P1(0, 3, 1)	5 (Compare all)	10
+ 
